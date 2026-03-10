@@ -42,6 +42,9 @@
                     <hr>
 
                     <div class="d-flex gap-2 flex-wrap">
+                        <a href="<?php echo base_url('docentes/' . $docente['id'] . '/materias');?>" class="btn btn-secondary">
+                            <i class="bi bi-journal-bookmark"></i> Ver Materias
+                        </a>
                         <a href="<?php echo base_url('docentes/edit/' . $docente['id']);?>" class="btn btn-warning">
                             <i class="bi bi-pencil"></i> Editar
                         </a>

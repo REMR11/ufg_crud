@@ -37,10 +37,14 @@
                             <p class="fs-5 fw-bold text-uppercase"><?php echo esc($horario['dia']);?></p>
                         </div>
                         <div class="col-md-4">
+                            <h6 class="text-muted"><i class="bi bi-sun"></i> Bloque</h6>
+                            <p class="fs-5 fw-bold text-uppercase"><?php echo esc($horario['bloque'] ?? '-');?></p>
+                        </div>
+                        <div class="col-md-4">
                             <h6 class="text-muted"><i class="bi bi-clock-history"></i> Hora Inicio</h6>
                             <p class="fs-5 fw-bold"><?php echo esc($horario['hora_inicio']);?></p>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-4 mt-3">
                             <h6 class="text-muted"><i class="bi bi-clock"></i> Hora Fin</h6>
                             <p class="fs-5 fw-bold"><?php echo esc($horario['hora_fin']);?></p>
                         </div>

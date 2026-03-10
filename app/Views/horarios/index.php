@@ -69,6 +69,7 @@
                         <th>Docente</th>
                         <th>Materia</th>
                         <th>Día</th>
+                        <th>Bloque</th>
                         <th>Hora Inicio</th>
                         <th>Hora Fin</th>
                         <th>Duración</th>
@@ -99,6 +100,11 @@
                             <td>
                                 <span class="badge bg-secondary text-uppercase">
                                     <?php echo esc(substr($horario['dia'], 0, 3));?>
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge bg-dark text-uppercase">
+                                    <?php echo esc($horario['bloque'] ?? '-');?>
                                 </span>
                             </td>
                             <td><?php echo esc($horario['hora_inicio']);?></td>

@@ -17,6 +17,7 @@ class HorarioModel extends Model
         'id_docente',
         'id_materia',
         'dia',
+        'bloque',
         'hora_inicio',
         'hora_fin',
     ];
@@ -40,6 +41,36 @@ class HorarioModel extends Model
             ->where('hora_inicio', $horaInicio)
             ->where('hora_fin', $horaFin)
             ->first();
+    }
+
+    public function existeMateriaMismoDia(
+        int $idDocente,
+        int $idMateria,
+        string $dia,
+        ?int $horarioIdExcluir = null
+    ): bool {
+        $builder = $this
+            ->where('id_docente', $idDocente)
+            ->where('id_materia', $idMateria)
+            ->where('dia', $dia);
+
+        if ($horarioIdExcluir !== null) {
+            $builder->where('id !=', $horarioIdExcluir);
+        }
+
+        return (bool) $builder->first();
+    }
+
+    public function obtenerBloquePorHora(string $horaInicio): string
+    {
+        $hora = strtotime($horaInicio);
+        $medioDia = strtotime('12:00');
+
+        if ($hora === false || $medioDia === false) {
+            return 'matutino';
+        }
+
+        return $hora < $medioDia ? 'matutino' : 'vespertino';
     }
 
     /**
@@ -113,7 +144,7 @@ class HorarioModel extends Model
     public function obtenerHorariosDocente(int $idDocente): array
     {
         return $this->db->table($this->table . ' h')
-            ->select('h.id, h.id_docente, CONCAT(d.nombre, \' \', d.apellido) as nombre_docente, h.id_materia, m.nombre_materia, h.dia, h.hora_inicio, h.hora_fin')
+            ->select('h.id, h.id_docente, CONCAT(d.nombre, \' \', d.apellido) as nombre_docente, h.id_materia, m.nombre_materia, h.dia, h.bloque, h.hora_inicio, h.hora_fin')
             ->join('docentes d', 'd.id = h.id_docente')
             ->join('materias m', 'm.id_materia = h.id_materia')
             ->where('h.id_docente', $idDocente)
@@ -129,7 +160,7 @@ class HorarioModel extends Model
     public function listarConDetalles(): array
     {
         return $this->db->table($this->table . ' h')
-            ->select('h.id, h.id_docente, CONCAT(d.nombre, \' \', d.apellido) as nombre_docente, h.id_materia, m.nombre_materia, h.dia, h.hora_inicio, h.hora_fin')
+            ->select('h.id, h.id_docente, CONCAT(d.nombre, \' \', d.apellido) as nombre_docente, h.id_materia, m.nombre_materia, h.dia, h.bloque, h.hora_inicio, h.hora_fin')
             ->join('docentes d', 'd.id = h.id_docente')
             ->join('materias m', 'm.id_materia = h.id_materia')
             ->orderBy('d.nombre', 'ASC')
@@ -146,7 +177,7 @@ class HorarioModel extends Model
     public function listarOpciones(): array
     {
         return $this->db->table($this->table . ' h')
-            ->select('h.id, CONCAT(d.nombre, \' \', d.apellido) as nombre_docente, m.nombre_materia, h.dia, h.hora_inicio, h.hora_fin')
+            ->select('h.id, CONCAT(d.nombre, \' \', d.apellido) as nombre_docente, m.nombre_materia, h.dia, h.bloque, h.hora_inicio, h.hora_fin')
             ->join('docentes d', 'd.id = h.id_docente')
             ->join('materias m', 'm.id_materia = h.id_materia')
             ->orderBy('d.nombre', 'ASC')

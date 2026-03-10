@@ -14,6 +14,7 @@
                     <tr>
                         <th>ID</th>
                         <th>Nombre</th>
+                        <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -21,6 +22,11 @@
                         <tr>
                             <td><?php echo esc($materia['id_materia']);?></td>
                             <td><?php echo esc($materia['nombre_materia']);?></td>
+                            <td>
+                                <a href="<?php echo base_url('materias/' . $materia['id_materia'] . '/alumnos');?>" class="btn btn-sm btn-primary">
+                                    <i class="bi bi-people"></i> Ver Alumnos
+                                </a>
+                            </td>
                         </tr>
                     <?php endforeach;?>
                 </tbody>

@@ -8,19 +8,21 @@ use CodeIgniter\Model;
 
 class InscripcionModel extends Model
 {
-    protected $table            = 'incripcion';
-    protected $primaryKey       = 'id_inscripcion';
+    protected $table            = 'inscripcions';
+    protected $primaryKey       = 'id';
     protected $useAutoIncrement = true;
     protected $returnType       = 'array';
 
     protected $allowedFields = [
+        'id_alumno',
+        'id_materia',
         'horario_id',
-        'alumno_id',
+        'fecha_inscripcion',
     ];
 
     public function existeInscripcion(int $alumnoId, int $horarioId, ?int $excluirId = null): bool
     {
-        $builder = $this->where('alumno_id', $alumnoId)->where('horario_id', $horarioId);
+        $builder = $this->where('id_alumno', $alumnoId)->where('horario_id', $horarioId);
 
         if ($excluirId !== null) {
             $builder->where($this->primaryKey . ' !=', $excluirId);
@@ -35,13 +37,13 @@ class InscripcionModel extends Model
     public function listarConDetalles(): array
     {
         return $this->db->table($this->table . ' i')
-            ->select('i.id_inscripcion, i.horario_id, i.alumno_id, a.codigo, a.nombre, a.apellido, m.nombre_materia, d.nombre_docente, h.dia, h.hora_inicio, h.hora_fin')
-            ->join('alumnos a', 'a.id = i.alumno_id')
-            ->join('horarios h', 'h.id = i.horario_id')
-            ->join('materias m', 'm.id_materia = h.id_materia')
-            ->join('docentes d', 'd.id_docente = h.id_docente')
+            ->select('i.id, i.horario_id, i.id_alumno, a.codigo, a.nombre, a.apellido, m.nombre_materia, CONCAT(d.nombre, \' \', d.apellido) as nombre_docente, h.dia, h.hora_inicio, h.hora_fin')
+            ->join('alumnos a', 'a.id = i.id_alumno')
+            ->join('horarios h', 'h.id = i.horario_id', 'left')
+            ->join('materias m', 'm.id_materia = COALESCE(i.id_materia, h.id_materia)', 'left')
+            ->join('docentes d', 'd.id = h.id_docente', 'left')
             ->orderBy('m.nombre_materia', 'ASC')
-            ->orderBy('d.nombre_docente', 'ASC')
+            ->orderBy('d.nombre', 'ASC')
             ->orderBy('h.dia', 'ASC')
             ->orderBy('h.hora_inicio', 'ASC')
             ->orderBy('a.apellido', 'ASC')
@@ -55,10 +57,14 @@ class InscripcionModel extends Model
     public function obtenerAlumnosPorMateria(int $idMateria): array
     {
         return $this->db->table($this->table . ' i')
-            ->select('a.id, a.codigo, a.nombre, a.apellido, a.telefono')
-            ->join('alumnos a', 'a.id = i.alumno_id')
-            ->join('horarios h', 'h.id = i.horario_id')
-            ->where('h.id_materia', $idMateria)
+            ->distinct()
+            ->select('a.id, a.foto, a.codigo, a.nombre, a.apellido, a.telefono, a.email')
+            ->join('alumnos a', 'a.id = i.id_alumno')
+            ->join('horarios h', 'h.id = i.horario_id', 'left')
+            ->groupStart()
+            ->where('i.id_materia', $idMateria)
+            ->orWhere('h.id_materia', $idMateria)
+            ->groupEnd()
             ->groupBy('a.id')
             ->orderBy('a.apellido', 'ASC')
             ->get()

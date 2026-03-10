@@ -38,7 +38,7 @@
                         <div class="alert alert-info mb-4" role="alert">
                             <i class="bi bi-info-circle"></i> 
                             <strong>Nota importante:</strong> Cada docente puede inscribirse en máximo 5 materias. 
-                            Cada materia tiene una duración de 2 horas exactas. No se permite solapamiento de horarios.
+                            Se permite repetir materia en días distintos. El bloque (matutino/vespertino) se define automáticamente por hora.
                         </div>
 
                         <div class="mb-3">
@@ -129,6 +129,11 @@
                             </div>
                         </div>
 
+                        <div class="mb-3">
+                            <label class="form-label">Bloque</label>
+                            <input type="text" class="form-control" id="bloque_preview" value="Se calculará automáticamente" readonly>
+                        </div>
+
                         <div class="d-flex gap-2">
                             <button type="submit" class="btn btn-primary">
                                 <i class="bi bi-check-circle"></i> Guardar
@@ -156,6 +161,9 @@ function calcularHoraFin() {
         const horaFin = String(fecha.getHours()).padStart(2, '0') + ':' + 
                        String(fecha.getMinutes()).padStart(2, '0');
         document.getElementById('hora_fin').value = horaFin;
+        document.getElementById('bloque_preview').value = (horas < 12) ? 'matutino' : 'vespertino';
+    } else {
+        document.getElementById('bloque_preview').value = 'Se calculará automáticamente';
     }
 }
 </script>

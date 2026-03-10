@@ -27,7 +27,7 @@ class Horario extends BaseController
         
         if (!empty($search) || !empty($filterDocente)) {
             $query = $this->horarioModel->db->table('horarios h')
-                ->select('h.id, h.id_docente, CONCAT(d.nombre, \' \', d.apellido) as nombre_docente, h.id_materia, m.nombre_materia, h.dia, h.hora_inicio, h.hora_fin')
+                ->select('h.id, h.id_docente, CONCAT(d.nombre, \' \', d.apellido) as nombre_docente, h.id_materia, m.nombre_materia, h.dia, h.bloque, h.hora_inicio, h.hora_fin')
                 ->join('docentes d', 'd.id = h.id_docente')
                 ->join('materias m', 'm.id_materia = h.id_materia');
             
@@ -107,21 +107,19 @@ class Horario extends BaseController
                 ->with('error', 'El docente ya tiene 5 materias inscritas. No puede inscribirse en más materias');
         }
 
-        // Validar que no sea materia duplicada para el mismo docente
-        $existe = $this->horarioModel->db->table('horarios')
-            ->where('id_docente', $idDocente)
-            ->where('id_materia', $idMateria)
-            ->countAllResults();
-        
-        if ($existe > 0) {
+        // Permite repetir materia, pero no en el mismo día
+        if ($this->horarioModel->existeMateriaMismoDia((int) $idDocente, (int) $idMateria, (string) $dia)) {
             return redirect()->back()->withInput()
-                ->with('error', 'Este docente ya tiene inscrita esta materia en otro horario');
+                ->with('error', 'Este docente ya tiene inscrita esta materia en el mismo día');
         }
+
+        $bloque = $this->horarioModel->obtenerBloquePorHora((string) $horaInicio);
 
         $this->horarioModel->save([
             'id_docente' => $idDocente,
             'id_materia' => $idMateria,
             'dia' => $dia,
+            'bloque' => $bloque,
             'hora_inicio' => $horaInicio,
             'hora_fin' => $horaFin,
         ]);
@@ -181,24 +179,25 @@ class Horario extends BaseController
                 ->with('error', 'El docente tiene conflicto de horario. Ya tiene otra materia en este día y hora');
         }
 
-        // Si cambió de materia, validar que no sea duplicada
-        if ($idMateria != $horario['id_materia']) {
-            $existe = $this->horarioModel->db->table('horarios')
-                ->where('id_docente', $idDocente)
-                ->where('id_materia', $idMateria)
-                ->where('id !=', $id)
-                ->countAllResults();
-            
-            if ($existe > 0) {
-                return redirect()->back()->withInput()
-                    ->with('error', 'Este docente ya tiene inscrita esta materia en otro horario');
-            }
+        // Si se cambia de docente y el destino ya tiene 5, bloquear edición
+        if ((int) $idDocente !== (int) $horario['id_docente'] && $this->horarioModel->contarMateriasDocente((int) $idDocente) >= 5) {
+            return redirect()->back()->withInput()
+                ->with('error', 'El docente seleccionado ya tiene 5 materias inscritas');
         }
+
+        // Permite repetir materia solo si es en distinto día
+        if ($this->horarioModel->existeMateriaMismoDia((int) $idDocente, (int) $idMateria, (string) $dia, (int) $id)) {
+            return redirect()->back()->withInput()
+                ->with('error', 'Este docente ya tiene inscrita esta materia en el mismo día');
+        }
+
+        $bloque = $this->horarioModel->obtenerBloquePorHora((string) $horaInicio);
 
         $this->horarioModel->update($id, [
             'id_docente' => $idDocente,
             'id_materia' => $idMateria,
             'dia' => $dia,
+            'bloque' => $bloque,
             'hora_inicio' => $horaInicio,
             'hora_fin' => $horaFin,
         ]);
@@ -221,7 +220,7 @@ class Horario extends BaseController
     public function show($id)
     {
         $horario = $this->horarioModel->db->table('horarios h')
-            ->select('h.id, h.id_docente, CONCAT(d.nombre, \' \', d.apellido) as nombre_docente, d.email as email_docente, d.telefono as telefono_docente, h.id_materia, m.nombre_materia, h.dia, h.hora_inicio, h.hora_fin')
+            ->select('h.id, h.id_docente, CONCAT(d.nombre, \' \', d.apellido) as nombre_docente, d.email as email_docente, d.telefono as telefono_docente, h.id_materia, m.nombre_materia, h.dia, h.bloque, h.hora_inicio, h.hora_fin')
             ->join('docentes d', 'd.id = h.id_docente')
             ->join('materias m', 'm.id_materia = h.id_materia')
             ->where('h.id', $id)
@@ -240,5 +239,24 @@ class Horario extends BaseController
             'title' => 'Ver Horario Docente'
         ];
         return view('horarios/show', $data);
+    }
+
+    public function materiasPorDocente($idDocente)
+    {
+        $docente = $this->docenteModel->find($idDocente);
+
+        if (!$docente) {
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
+        }
+
+        $horarios = $this->horarioModel->obtenerHorariosDocente((int) $idDocente);
+
+        $data = [
+            'docente' => $docente,
+            'horarios' => $horarios,
+            'title' => 'Materias por Docente',
+        ];
+
+        return view('docentes/materias', $data);
     }
 }

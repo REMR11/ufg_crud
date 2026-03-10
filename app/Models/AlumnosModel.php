@@ -8,5 +8,5 @@ class AlumnosModel extends Model
 {
     protected $table = 'alumnos';
     protected $primaryKey = 'id';
-    protected $allowedFields = ['nombre', 'apellido', 'email', 'telefono', 'codigo', 'codigo_carrera'];
+    protected $allowedFields = ['foto', 'nombre', 'apellido', 'email', 'telefono', 'codigo', 'codigo_carrera'];
 }

@@ -78,9 +78,21 @@ class Validation extends BaseConfig
      * Reglas de validación para Docentes
      */
     public array $docente = [
-        'nombre_docente' => [
-            'label' => 'Nombre del Docente',
-            'rules' => 'required|string|min_length[2]|max_length[150]',
+        'nombre' => [
+            'label' => 'Nombre',
+            'rules' => 'required|string|min_length[2]|max_length[100]',
+        ],
+        'apellido' => [
+            'label' => 'Apellido',
+            'rules' => 'required|string|min_length[2]|max_length[100]',
+        ],
+        'email' => [
+            'label' => 'Correo Electrónico',
+            'rules' => 'required|valid_email|max_length[100]|is_unique[docentes.email,id,{id}]',
+        ],
+        'telefono' => [
+            'label' => 'Teléfono',
+            'rules' => 'permit_empty|max_length[20]',
         ],
     ];
 

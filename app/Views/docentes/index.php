@@ -58,6 +58,10 @@
                             <td><?php echo esc($docente['nombre'] . ' ' . $docente['apellido']);?></td>
                             <td>
                                 <div class="btn-group btn-group-sm" role="group">
+                                    <a href="<?php echo base_url('docentes/' . $docente['id'] . '/materias');?>" 
+                                       class="btn btn-secondary" title="Materias">
+                                        <i class="bi bi-journal-bookmark"></i>
+                                    </a>
                                     <a href="<?php echo base_url('docentes/show/' . $docente['id']);?>" 
                                        class="btn btn-info" title="Ver">
                                         <i class="bi bi-eye"></i>

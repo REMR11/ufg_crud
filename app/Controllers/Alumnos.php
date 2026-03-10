@@ -59,7 +59,30 @@ class Alumnos extends BaseController
             return redirect()->back()->withInput()->with('validation', $this->validator);
         }
 
+        $fotoNombre = null;
+        $foto = $this->request->getFile('foto');
+
+        if ($foto && $foto->isValid() && !$foto->hasMoved()) {
+            $permitidas = ['image/jpg', 'image/jpeg', 'image/png', 'image/webp'];
+            if (!in_array($foto->getMimeType(), $permitidas, true)) {
+                return redirect()->back()->withInput()->with('error', 'La foto debe ser JPG, PNG o WEBP');
+            }
+
+            if ($foto->getSizeByUnit('kb') > 2048) {
+                return redirect()->back()->withInput()->with('error', 'La foto no debe superar 2MB');
+            }
+
+            $uploadPath = FCPATH . 'uploads';
+            if (!is_dir($uploadPath)) {
+                mkdir($uploadPath, 0755, true);
+            }
+
+            $fotoNombre = $foto->getRandomName();
+            $foto->move($uploadPath, $fotoNombre);
+        }
+
         $this->alumnoModel->save([
+            'foto' => $fotoNombre,
             'nombre' => $this->request->getPost('nombre'),
             'apellido' => $this->request->getPost('apellido'),
             'email' => $this->request->getPost('email'),
@@ -128,7 +151,36 @@ class Alumnos extends BaseController
             return redirect()->back()->withInput()->with('validation', $this->validator);
         }
 
+        $fotoNombre = $alumno['foto'] ?? null;
+        $foto = $this->request->getFile('foto');
+
+        if ($foto && $foto->isValid() && !$foto->hasMoved()) {
+            $permitidas = ['image/jpg', 'image/jpeg', 'image/png', 'image/webp'];
+            if (!in_array($foto->getMimeType(), $permitidas, true)) {
+                return redirect()->back()->withInput()->with('error', 'La foto debe ser JPG, PNG o WEBP');
+            }
+
+            if ($foto->getSizeByUnit('kb') > 2048) {
+                return redirect()->back()->withInput()->with('error', 'La foto no debe superar 2MB');
+            }
+
+            $uploadPath = FCPATH . 'uploads';
+            if (!is_dir($uploadPath)) {
+                mkdir($uploadPath, 0755, true);
+            }
+
+            $nuevoNombre = $foto->getRandomName();
+            $foto->move($uploadPath, $nuevoNombre);
+
+            if (!empty($fotoNombre) && is_file($uploadPath . '/' . $fotoNombre)) {
+                unlink($uploadPath . '/' . $fotoNombre);
+            }
+
+            $fotoNombre = $nuevoNombre;
+        }
+
         $this->alumnoModel->update($id, [
+            'foto' => $fotoNombre,
             'nombre' => $this->request->getPost('nombre'),
             'apellido' => $this->request->getPost('apellido'),
             'email' => $this->request->getPost('email'),

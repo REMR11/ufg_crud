@@ -14,6 +14,9 @@ class DocenteModel extends Model
     protected $returnType       = 'array';
 
     protected $allowedFields = [
-        'nombre_docente',
+        'nombre',
+        'apellido',
+        'email',
+        'telefono',
     ];
 }

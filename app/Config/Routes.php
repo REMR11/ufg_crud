@@ -24,6 +24,7 @@ $routes->get('/docentes/show/(:num)', 'Docentes::show/$1');
 $routes->get('/docentes/edit/(:num)', 'Docentes::edit/$1');
 $routes->post('/docentes/update/(:num)', 'Docentes::update/$1');
 $routes->get('/docentes/delete/(:num)', 'Docentes::delete/$1');
+$routes->get('/docentes/(:num)/materias', 'Horario::materiasPorDocente/$1');
 
 // Rutas para Carreras
 $routes->get('/carreras', 'Carreras::index');
@@ -45,6 +46,7 @@ $routes->get('/horarios/delete/(:num)', 'Horario::delete/$1');
 
 // Rutas para Materias
 $routes->get('/materias', 'Home::materias');
+$routes->get('/materias/(:num)/alumnos', 'Home::alumnosPorMateria/$1');
 
 // Rutas para Asignación Alumno-Carrera
 $routes->get('/alumno_carrera', 'AlumnoCarrera::index');

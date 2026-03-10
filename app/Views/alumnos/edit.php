@@ -24,8 +24,38 @@
                         </div>
                     <?php endif;?>
 
-                    <form action="<?php echo base_url('alumnos/update/' . $alumno['id']);?>" method="POST" id="formAlumno">
+                    <?php if (session()->getFlashdata('error')): ?>
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="bi bi-x-circle"></i> <?php echo session()->getFlashdata('error');?>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    <?php endif;?>
+
+                    <form action="<?php echo base_url('alumnos/update/' . $alumno['id']);?>" method="POST" enctype="multipart/form-data" id="formAlumno">
                         <?php echo csrf_field();?>
+
+                        <div class="mb-3">
+                            <label for="foto" class="form-label">Foto</label>
+                            <input type="file" class="form-control" id="foto" name="foto" accept=".jpg,.jpeg,.png,.webp">
+                            <small class="text-muted">Formatos permitidos: JPG, PNG o WEBP (máx 2MB)</small>
+                            <?php if (!empty($alumno['foto'])): ?>
+                                <div class="mt-2">
+                                    <img src="<?php echo base_url('uploads/' . $alumno['foto']);?>" alt="Foto actual" width="64" height="64" class="rounded-circle border">
+                                </div>
+                            <?php endif;?>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="codigo" class="form-label">Carnet <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control <?php echo (session('validation') && session('validation')->hasError('codigo')) ? 'is-invalid' : '';?>" 
+                                   id="codigo" name="codigo" required maxlength="20"
+                                   value="<?php echo esc($alumno['codigo']);?>">
+                            <?php if (session('validation') && session('validation')->hasError('codigo')): ?>
+                                <div class="invalid-feedback d-block">
+                                    <?php echo session('validation')->getError('codigo');?>
+                                </div>
+                            <?php endif;?>
+                        </div>
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
@@ -79,17 +109,6 @@
                                 <?php endif;?>
                             </div>
 
-                            <div class="col-md-6 mb-3">
-                                <label for="codigo" class="form-label">Código de Estudiante <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control <?php echo (session('validation') && session('validation')->hasError('codigo')) ? 'is-invalid' : '';?>" 
-                                       id="codigo" name="codigo" required maxlength="20"
-                                       value="<?php echo esc($alumno['codigo']);?>">
-                                <?php if (session('validation') && session('validation')->hasError('codigo')): ?>
-                                    <div class="invalid-feedback d-block">
-                                        <?php echo session('validation')->getError('codigo');?>
-                                    </div>
-                                <?php endif;?>
-                            </div>
                         </div>
 
                         <div class="mb-3">

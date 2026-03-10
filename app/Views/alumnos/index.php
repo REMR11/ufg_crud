@@ -47,11 +47,12 @@
                 <thead class="table-dark">
                     <tr>
                         <th>ID</th>
+                        <th>Foto</th>
+                        <th>Carnet</th>
                         <th>Nombre</th>
                         <th>Apellido</th>
                         <th>Email</th>
                         <th>Teléfono</th>
-                        <th>Código</th>
                         <th>Carrera</th>
                         <th>Acciones</th>
                     </tr>
@@ -60,11 +61,18 @@
                     <?php foreach ($alumnos as $alumno): ?>
                         <tr>
                             <td><?php echo $alumno['id'];?></td>
+                            <td>
+                                <?php if (!empty($alumno['foto'])): ?>
+                                    <img src="<?php echo base_url('uploads/' . $alumno['foto']);?>" alt="Foto" width="48" height="48" class="rounded-circle border">
+                                <?php else: ?>
+                                    <span class="badge bg-secondary">Sin foto</span>
+                                <?php endif;?>
+                            </td>
+                            <td><?php echo esc($alumno['codigo']);?></td>
                             <td><?php echo esc($alumno['nombre']);?></td>
                             <td><?php echo esc($alumno['apellido']);?></td>
                             <td><?php echo esc($alumno['email']);?></td>
                             <td><?php echo esc($alumno['telefono'] ?? '-');?></td>
-                            <td><?php echo esc($alumno['codigo']);?></td>
                             <td><?php echo esc($alumno['codigo_carrera']);?></td>
                             <td>
                                 <div class="btn-group btn-group-sm" role="group">
