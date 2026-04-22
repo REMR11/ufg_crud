@@ -1,0 +1,23 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/laravel/Dockerfile
+    container_name: ufg_laravel_app
+    working_dir: /var/www/html
+    volumes:
+      - ./laravel_app:/var/www/html
+    ports:
+      - "8000:8000"
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      APP_URL: http://localhost:8000
+      APP_LOCALE: es
+      DB_CONNECTION: pgsql
+      DB_HOST: aws-0-us-west-2.pooler.supabase.com
+      DB_PORT: "6543"
+      DB_DATABASE: postgres
+      DB_USERNAME: postgres.wczdgaujomnojlszzvhy
+      DB_PASSWORD: ${SUPABASE_DB_PASSWORD}
+      DB_SSLMODE: require
