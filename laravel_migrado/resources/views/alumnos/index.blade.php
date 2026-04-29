@@ -17,7 +17,7 @@
     <table class="table table-bordered bg-white">
         <thead><tr><th>Codigo</th><th>Nombre</th><th>Email</th><th>Acciones</th></tr></thead>
         <tbody>
-        @foreach($alumnos as $alumno)
+        @forelse($alumnos as $alumno)
             <tr>
                 <td>{{ $alumno->codigo }}</td>
                 <td>{{ $alumno->nombre }} {{ $alumno->apellido }}</td>
@@ -31,7 +31,14 @@
                     </form>
                 </td>
             </tr>
-        @endforeach
+        @empty
+            <tr>
+                <td colspan="4" class="text-center text-muted">No hay alumnos registrados.</td>
+            </tr>
+        @endforelse
         </tbody>
     </table>
+    <div class="d-flex justify-content-center">
+        {{ $alumnos->links() }}
+    </div>
 @endsection

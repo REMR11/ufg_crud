@@ -8,13 +8,17 @@ use App\Models\Alumno;
 use App\Models\Horario;
 use App\Models\Inscripcion;
 use App\Models\Materia;
+use App\Services\InscripcionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class InscripcionesController extends Controller
 {
+    public function __construct(private readonly InscripcionService $inscripcionService) {}
+
     public function index(Request $request): View
     {
         $search = (string) $request->query('search', '');
@@ -31,7 +35,7 @@ class InscripcionesController extends Controller
                         ->orWhere('m.nombre_materia', 'like', "%{$search}%");
                 });
             })
-            ->when(!empty($idMateria), function ($query) use ($idMateria): void {
+            ->when(! empty($idMateria), function ($query) use ($idMateria): void {
                 $query->where(function ($nested) use ($idMateria): void {
                     $nested
                         ->where('inscripcions.id_materia', (int) $idMateria)
@@ -57,11 +61,44 @@ class InscripcionesController extends Controller
     public function store(StoreInscripcionRequest $request): RedirectResponse
     {
         $data = $request->validated();
-        $this->assertNoDuplicada((int) $data['id_alumno'], (int) $data['horario_id']);
+        $idAlumno = (int) $data['id_alumno'];
+        $lineas = $data['lineas'];
+        $horarioIds = array_map(fn (array $l): int => (int) $l['horario_id'], $lineas);
 
-        Inscripcion::query()->create($data);
+        foreach (array_values($lineas) as $i => $linea) {
+            $this->assertNoDuplicada(
+                $idAlumno,
+                (int) $linea['horario_id'],
+                null,
+                "lineas.{$i}.horario_id"
+            );
+        }
 
-        return redirect()->route('inscripciones.index')->with('success', 'Inscripción creada exitosamente.');
+        $this->inscripcionService->validarLoteInscripciones($idAlumno, $horarioIds);
+
+        $fecha = $data['fecha_inscripcion'] ?? null;
+
+        DB::transaction(function () use ($idAlumno, $lineas, $fecha): void {
+            foreach ($lineas as $linea) {
+                $mid = $linea['id_materia'] ?? null;
+                $attrs = [
+                    'id_alumno' => $idAlumno,
+                    'horario_id' => (int) $linea['horario_id'],
+                    'id_materia' => $mid !== null && $mid !== '' ? (int) $mid : null,
+                ];
+                if ($fecha !== null) {
+                    $attrs['fecha_inscripcion'] = $fecha;
+                }
+                Inscripcion::query()->create($attrs);
+            }
+        });
+
+        $n = count($lineas);
+        $message = $n === 1
+            ? 'Inscripción creada exitosamente.'
+            : "Se registraron {$n} inscripciones correctamente.";
+
+        return redirect()->route('inscripciones.index')->with('success', $message);
     }
 
     public function show(Inscripcion $inscripcion): View
@@ -86,6 +123,11 @@ class InscripcionesController extends Controller
     {
         $data = $request->validated();
         $this->assertNoDuplicada((int) $data['id_alumno'], (int) $data['horario_id'], (int) $inscripcion->id);
+        $this->inscripcionService->validarReglasAlumno(
+            (int) $data['id_alumno'],
+            (int) $data['horario_id'],
+            (int) $inscripcion->id
+        );
 
         $inscripcion->update($data);
 
@@ -99,8 +141,12 @@ class InscripcionesController extends Controller
         return redirect()->route('inscripciones.index')->with('success', 'Inscripción eliminada exitosamente.');
     }
 
-    private function assertNoDuplicada(int $idAlumno, int $horarioId, ?int $excludeId = null): void
-    {
+    private function assertNoDuplicada(
+        int $idAlumno,
+        int $horarioId,
+        ?int $excludeId = null,
+        string $errorKey = 'horario_id'
+    ): void {
         $duplicada = Inscripcion::query()
             ->where('id_alumno', $idAlumno)
             ->where('horario_id', $horarioId)
@@ -109,7 +155,7 @@ class InscripcionesController extends Controller
 
         if ($duplicada) {
             throw ValidationException::withMessages([
-                'horario_id' => 'El alumno ya se encuentra inscrito en ese horario.',
+                $errorKey => 'El alumno ya se encuentra inscrito en ese horario.',
             ]);
         }
     }

@@ -128,7 +128,8 @@ return [
     */
 
     'migrations' => [
-        'table' => 'migrations',
+        // Nombre distinto a la tabla `migrations` que usa Supabase (otro esquema de columnas)
+        'table' => env('DB_MIGRATIONS_TABLE', 'laravel_migrations'),
         'update_date_on_publish' => true,
     ],
 

@@ -31,12 +31,6 @@
                 <li class="nav-item"><a class="nav-link" href="{{ route('inscripciones.index') }}">Inscripciones</a></li>
                 <li class="nav-item"><a class="nav-link" href="{{ route('alumno_carrera.index') }}">Alumno-Carrera</a></li>
                 <li class="nav-item"><a class="nav-link" href="{{ route('materias.index') }}">Materias</a></li>
-                <li class="nav-item ms-3">
-                    <form method="post" action="{{ route('logout') }}">
-                        @csrf
-                        <button class="btn btn-sm btn-light" type="submit">Salir</button>
-                    </form>
-                </li>
             </ul>
         </div>
     </div>
@@ -50,5 +44,6 @@
 </footer>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="{{ asset('js/form-validation.js') }}"></script>
+@stack('scripts')
 </body>
 </html>

@@ -7,7 +7,6 @@ use App\Models\Docente;
 use App\Models\Horario;
 use App\Models\Inscripcion;
 use App\Models\Materia;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -17,7 +16,6 @@ class InscripcionesFeatureTest extends TestCase
 
     public function test_no_permite_inscripcion_duplicada_por_alumno_y_horario(): void
     {
-        $user = User::factory()->create();
         $alumno = Alumno::create([
             'nombre' => 'Carlos',
             'apellido' => 'Ruiz',
@@ -46,19 +44,19 @@ class InscripcionesFeatureTest extends TestCase
             'id_materia' => $materia->id_materia,
         ]);
 
-        $response = $this->actingAs($user)->post(route('inscripciones.store'), [
+        $response = $this->post(route('inscripciones.store'), [
             'id_alumno' => $alumno->id,
-            'horario_id' => $horario->id,
-            'id_materia' => $materia->id_materia,
+            'lineas' => [
+                ['horario_id' => $horario->id, 'id_materia' => $materia->id_materia],
+            ],
         ]);
 
-        $response->assertSessionHasErrors('horario_id');
+        $response->assertSessionHasErrors('lineas.0.horario_id');
         $this->assertDatabaseCount('inscripcions', 1);
     }
 
     public function test_listado_materias_aplica_fallback_a_horario_cuando_id_materia_es_null(): void
     {
-        $user = User::factory()->create();
         $alumno = Alumno::create([
             'nombre' => 'Marta',
             'apellido' => 'Diaz',
@@ -87,9 +85,44 @@ class InscripcionesFeatureTest extends TestCase
             'id_materia' => null,
         ]);
 
-        $response = $this->actingAs($user)->get(route('inscripciones.index'));
+        $response = $this->get(route('inscripciones.index'));
 
         $response->assertOk();
         $response->assertSee('Bases de Datos');
+    }
+
+    public function test_permite_tres_materias_en_un_solo_envio(): void
+    {
+        $alumno = Alumno::create([
+            'nombre' => 'Lina',
+            'apellido' => 'Paz',
+            'email' => 'lina@example.com',
+            'codigo' => 'ALU300',
+            'codigo_carrera' => '1',
+        ]);
+        $lineas = [];
+        foreach (['lunes', 'martes', 'miercoles'] as $dia) {
+            $docente = Docente::create([
+                'nombre' => 'Doc',
+                'apellido' => $dia,
+                'email' => "doc-{$dia}@example.com",
+            ]);
+            $materia = Materia::create(['nombre_materia' => "Mat {$dia}"]);
+            $horario = Horario::create([
+                'id_docente' => $docente->id,
+                'id_materia' => $materia->id_materia,
+                'dia' => $dia,
+                'bloque' => 'vespertino',
+                'hora_inicio' => '14:00:00',
+                'hora_fin' => '16:00:00',
+            ]);
+            $lineas[] = ['horario_id' => $horario->id, 'id_materia' => $materia->id_materia];
+        }
+        $response = $this->post(route('inscripciones.store'), [
+            'id_alumno' => $alumno->id,
+            'lineas' => $lineas,
+        ]);
+        $response->assertSessionHasNoErrors()->assertRedirect(route('inscripciones.index'));
+        $this->assertDatabaseCount('inscripcions', 3);
     }
 }

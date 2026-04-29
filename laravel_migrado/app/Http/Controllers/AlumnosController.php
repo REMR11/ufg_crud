@@ -7,7 +7,6 @@ use App\Http\Requests\Alumno\UpdateAlumnoRequest;
 use App\Models\Alumno;
 use App\Models\Carrera;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class AlumnosController extends Controller
 {
@@ -22,7 +21,9 @@ class AlumnosController extends Controller
                     ->orWhere('codigo', 'like', "%{$search}%");
             })
             ->orderBy('apellido')
-            ->get();
+            ->orderBy('nombre')
+            ->paginate(10)
+            ->withQueryString();
 
         return view('alumnos.index', compact('alumnos', 'search'));
     }
@@ -36,9 +37,6 @@ class AlumnosController extends Controller
     public function store(StoreAlumnoRequest $request)
     {
         $data = $request->validated();
-        if ($request->hasFile('foto')) {
-            $data['foto'] = $request->file('foto')->store('alumnos', 'public');
-        }
         Alumno::create($data);
         return redirect()->route('alumnos.index')->with('success', 'Alumno creado exitosamente.');
     }
@@ -58,21 +56,12 @@ class AlumnosController extends Controller
     public function update(UpdateAlumnoRequest $request, Alumno $alumno)
     {
         $data = $request->validated();
-        if ($request->hasFile('foto')) {
-            if (!empty($alumno->foto)) {
-                Storage::disk('public')->delete($alumno->foto);
-            }
-            $data['foto'] = $request->file('foto')->store('alumnos', 'public');
-        }
         $alumno->update($data);
         return redirect()->route('alumnos.index')->with('success', 'Alumno actualizado exitosamente.');
     }
 
     public function destroy(Alumno $alumno)
     {
-        if (!empty($alumno->foto)) {
-            Storage::disk('public')->delete($alumno->foto);
-        }
         $alumno->delete();
         return redirect()->route('alumnos.index')->with('success', 'Alumno eliminado exitosamente.');
     }

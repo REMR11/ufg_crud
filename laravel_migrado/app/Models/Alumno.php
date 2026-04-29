@@ -10,8 +10,10 @@ class Alumno extends Model
 {
     protected $table = 'alumnos';
 
+    /** La tabla en PostgreSQL/legacy puede no incluir created_at / updated_at */
+    public $timestamps = false;
+
     protected $fillable = [
-        'foto',
         'nombre',
         'apellido',
         'email',
